@@ -22,6 +22,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // const response = await fetch(
+      //   `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/auth/client/login`,
+      //   {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "https://178-104-162-74.sslip.io"}/api/v1/auth/client/login`,
         {

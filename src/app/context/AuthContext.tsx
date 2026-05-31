@@ -27,16 +27,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // On app load, rehydrate user from localStorage
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) setUserState(JSON.parse(stored));
-    } catch {
-      localStorage.removeItem("user");
-    } finally {
-      setIsLoading(false);
+  try {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // If user is locked or blocked, clear session immediately
+      if (parsed.status === "locked" || parsed.status === "permanently_blocked") {
+        localStorage.clear();
+        window.location.href = "/login";
+        return;
+      }
+      setUserState(parsed);
     }
-  }, []);
+  } catch {
+    localStorage.removeItem("user");
+  } finally {
+    setIsLoading(false);
+  }
+}, []);
 
   const setUser = (user: AuthUser | null) => {
     setUserState(user);
