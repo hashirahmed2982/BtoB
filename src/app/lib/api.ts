@@ -1,6 +1,8 @@
 // lib/api.ts
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://178-104-162-74.sslip.io';
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 const API_VERSION = 'v1';
 
 class ApiService {
@@ -10,10 +12,10 @@ class ApiService {
     this.baseURL = `${API_BASE_URL}/api/${API_VERSION}`;
   }
 
-  private getHeaders(includeAuth = true): HeadersInit {
+  private async getHeaders(includeAuth = true): Promise<HeadersInit> {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
     if (includeAuth && typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
+      const token = await this.getValidToken();
       if (token) headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
@@ -32,6 +34,16 @@ class ApiService {
       if (response.status === 403 && data.message?.includes('You must change your password before accessing this resource.')) {
         window.location.href = '/change-password';
       }
+      if (response.status === 403) {
+        if (
+          data.message?.toLowerCase().includes("locked") ||
+          data.message?.toLowerCase().includes("blocked")
+        ) {
+          localStorage.clear();
+          window.location.href = "/login";
+          return;
+        }
+      }
       const error = new Error(data.message || 'API request failed') as Error & { status?: number; data?: any };
       error.status = response.status;
       error.data = data;
@@ -39,10 +51,53 @@ class ApiService {
     }
     return data;
   }
+  private refreshPromise: Promise<string> | null = null;
 
+  private async getValidToken(): Promise<string | null> {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!accessToken || !refreshToken) return null;
+
+    // Decode token to check expiry (without verifying signature)
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const expiresIn = payload.exp * 1000 - Date.now();
+
+      // If token expires in less than 2 minutes, refresh it proactively
+      if (expiresIn < 2 * 60 * 1000) {
+        if (!this.refreshPromise) {
+          this.refreshPromise = this.doRefresh(refreshToken).finally(() => {
+            this.refreshPromise = null;
+          });
+        }
+        return await this.refreshPromise;
+      }
+    } catch {
+      // malformed token — fall through
+    }
+    return accessToken;
+  }
+
+  private async doRefresh(refreshToken: string): Promise<string> {
+    const res = await fetch(`${this.baseURL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) {
+      localStorage.clear();
+      window.location.href = '/login';
+      throw new Error('Session expired');
+    }
+
+    const data = await res.json();
+    localStorage.setItem('accessToken', data.data.accessToken);
+    return data.data.accessToken;
+  }
   private async request(endpoint: string, options: RequestInit = {}, includeAuth = true) {
     const url = `${this.baseURL}${endpoint}`;
-    const headers = this.getHeaders(includeAuth);
+    const headers = await this.getHeaders(includeAuth);
     try {
       const response = await fetch(url, {
         ...options,
@@ -174,28 +229,28 @@ class ApiService {
   async getClientDashboard() {
     return this.request('/client/dashboard');
   }
- 
+
   /** Client: paginated order history */
   async getClientOrders(params?: { status?: string; page?: number; limit?: number }) {
     const p = new URLSearchParams();
     if (params?.status) p.set('status', params.status);
-    if (params?.page)   p.set('page',   String(params.page));
-    if (params?.limit)  p.set('limit',  String(params.limit));
+    if (params?.page) p.set('page', String(params.page));
+    if (params?.limit) p.set('limit', String(params.limit));
     return this.request(`/client/orders${p.toString() ? '?' + p : ''}`);
   }
- 
+
   /** Client: list support tickets */
   async getClientTickets(page = 1, limit = 20) {
     return this.request(`/client/tickets?page=${page}&limit=${limit}`);
   }
- 
+
   /** Client: create support ticket — multipart/form-data (attachment optional) */
   async createSupportTicket(title: string, description: string, attachment: File | null) {
     const fd = new FormData();
     fd.append('title', title);
     fd.append('description', description);
     if (attachment) fd.append('attachment', attachment);
- 
+
     const headers: HeadersInit = {};
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('accessToken');
@@ -204,9 +259,9 @@ class ApiService {
     const res = await fetch(`${this.baseURL}/client/tickets`, { method: 'POST', headers, body: fd });
     return this.handleResponse(res);
   }
- 
-// ── ORDERS (CLIENT) ────────────────────────────────────────────────────────
- 
+
+  // ── ORDERS (CLIENT) ────────────────────────────────────────────────────────
+
   /** Place an order from cart items */
   async placeOrder(items: { productId: string; skuId?: string; quantity: number }[], notes?: string) {
     return this.request('/orders', {
@@ -214,22 +269,22 @@ class ApiService {
       body: JSON.stringify({ items, notes }),
     });
   }
- 
+
   /** Client: paginated order history */
   async getMyOrders(params?: { status?: string; page?: number; limit?: number }) {
     const p = new URLSearchParams();
     if (params?.status) p.set('status', params.status);
-    if (params?.page)   p.set('page',   String(params.page));
-    if (params?.limit)  p.set('limit',  String(params.limit));
+    if (params?.page) p.set('page', String(params.page));
+    if (params?.limit) p.set('limit', String(params.limit));
     return this.request(`/orders${p.toString() ? '?' + p : ''}`);
   }
- 
+
   /** Client: single order detail */
   async getMyOrderById(id: string | number) {
     return this.request(`/orders/${id}`);
   }
- 
-  
+
+
 }
 
 export const api = new ApiService();
