@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Dashboard from "@/components/Dashboard";
@@ -29,6 +29,8 @@ function mapCartProductFromApi(p: any) {
     description:      p.description || "",
     rating:           0,
     reviews:          0,
+    availableCodes:   p.availableCodes !== undefined && p.availableCodes !== null ? Number(p.availableCodes) : null,
+    unlimitedStock:   p.unlimitedStock !== undefined ? Boolean(p.unlimitedStock) : false,
   };
 }
 
@@ -58,6 +60,21 @@ function OrderOtpModal({
   error: string | null;
 }) {
   const [otp, setOtp] = useState("");
+  const [timeLeft, setTimeLeft] = useState(60);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const handleResend = async () => {
+    if (resending || verifying || timeLeft > 0) return;
+    await onResend();
+    setTimeLeft(60);
+  };
 
   const submit = () => {
     if (otp.length !== 6 || verifying) return;
@@ -114,14 +131,21 @@ function OrderOtpModal({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onResend}
-            disabled={resending || verifying}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
-          >
-            {resending ? "Sending new code..." : "Resend code"}
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending || verifying || timeLeft > 0}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 disabled:no-underline disabled:text-gray-400 dark:disabled:text-gray-500 font-medium"
+            >
+              {resending ? "Sending new code..." : "Resend code"}
+            </button>
+            {timeLeft > 0 && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                Resend in {timeLeft}s
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
@@ -372,29 +396,44 @@ export default function CartPage() {
   const [resendingOtp, setResendingOtp] = useState(false);
   const [placeError,   setPlaceError]   = useState<string | null>(null);
   const [otpError, setOtpError] = useState<string | null>(null);
+  const syncRef = useRef(false);
 
+  // Sync cart items with server data on mount (once only per component mount)
   useEffect(() => {
-    const missingProducts = cartItems.filter(item => !item.product);
-    if (missingProducts.length === 0) return;
+    if (syncRef.current || cartItems.length === 0) return;
+    syncRef.current = true;
 
-    let cancelled = false;
+    let isMounted = true;
     Promise.all(
-      missingProducts.map(item =>
+      cartItems.map(item =>
         api.getClientProductById(item.productId)
           .then(res => ({ productId: item.productId, product: mapCartProductFromApi(res.data) }))
           .catch(() => null)
       )
     ).then(results => {
-      if (cancelled) return;
+      if (!isMounted) return;
       results.forEach(result => {
         if (result?.product) {
+          // Update product snapshot
           addToCart(result.productId, 0, result.product);
+
+          // Check stock limits and auto-cap quantity
+          const item = cartItems.find(i => i.productId === result.productId);
+          if (item) {
+            const hasStockLimit = !result.product.unlimitedStock && result.product.availableCodes !== undefined && result.product.availableCodes !== null;
+            if (hasStockLimit) {
+              const maxStock = result.product.availableCodes || 0;
+              if (item.quantity > maxStock) {
+                updateCartQuantity(result.productId, maxStock);
+              }
+            }
+          }
         }
       });
     });
 
-    return () => { cancelled = true; };
-  }, [cartItems, addToCart]);
+    return () => { isMounted = false; };
+  }, []); // Only run on mount
 
   const sendOrderOtp = async (isResend = false) => {
     const email = user?.email;
@@ -504,8 +543,8 @@ export default function CartPage() {
 
                   return (
                     <div key={item.productId} className="cart-item">
-                      <div>
-                        <p className="font-semibold">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">
                           {product?.name ?? item.productId}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -513,21 +552,32 @@ export default function CartPage() {
                         </p>
                       </div>
                       <div className="cart-item-actions">
-                        <input
-                          type="number"
-                          min={1}
-                          value={item.quantity}
-                          onChange={e =>
-                            updateCartQuantity(
-                              item.productId,
-                              Math.max(1, Number(e.target.value) || 1)
-                            )
-                          }
-                        />
-                        <p className="font-semibold">${subtotal}</p>
+                        <div className="flex flex-col items-center gap-1">
+                          <input
+                            type="number"
+                            min={1}
+                            max={product?.unlimitedStock ? undefined : product?.availableCodes ?? undefined}
+                            value={item.quantity}
+                            onChange={e => {
+                              const val = Math.max(1, Number(e.target.value) || 1);
+                              const maxVal = product?.unlimitedStock ? val : (product?.availableCodes ?? val);
+                              updateCartQuantity(
+                                item.productId,
+                                Math.min(val, maxVal)
+                              );
+                            }}
+                            className="text-center"
+                          />
+                          {product && !product.unlimitedStock && product.availableCodes !== undefined && product.availableCodes !== null && (
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
+                              {product.availableCodes} available
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-semibold whitespace-nowrap">${subtotal}</p>
                         <button
                           type="button"
-                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors flex-shrink-0"
                           onClick={() => removeFromCart(item.productId)}
                         >
                           Remove

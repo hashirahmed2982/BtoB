@@ -20,14 +20,37 @@ export default function MFAVerificationModal({
   const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
 
   useEffect(() => {
     // Simulate sending OTP
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setOtpSent(true);
       console.log("OTP sent to admin email: 123456");
     }, 1000);
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!otpSent) return;
+    if (timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpSent, timeLeft]);
+
+  const handleResend = () => {
+    if (isVerifying || timeLeft > 0) return;
+    setOtpSent(false);
+    setError("");
+    setOtp("");
+    setTimeout(() => {
+      setOtpSent(true);
+      setTimeLeft(60);
+      console.log("OTP sent to admin email: 123456");
+    }, 1000);
+  };
 
   const handleVerify = () => {
     if (otp.length !== 6) {
@@ -213,6 +236,23 @@ export default function MFAVerificationModal({
                   </p>
                 </div>
               )}
+
+              {/* Resend Code Button & Timer */}
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isVerifying || timeLeft > 0}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 disabled:no-underline disabled:text-gray-400 dark:disabled:text-gray-500 font-medium"
+                >
+                  Resend code
+                </button>
+                {timeLeft > 0 && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    Resend in {timeLeft}s
+                  </span>
+                )}
+              </div>
 
               {/* Demo Hint */}
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-center">

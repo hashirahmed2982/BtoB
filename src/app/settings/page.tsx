@@ -41,6 +41,21 @@ function SettingsOtpModal({
   onResend: () => Promise<void>;
 }) {
   const [otp, setOtp] = useState("");
+  const [timeLeft, setTimeLeft] = useState(60);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const handleResend = async () => {
+    if (resending || verifying || timeLeft > 0) return;
+    await onResend();
+    setTimeLeft(60);
+  };
 
   const submit = () => {
     if (otp.length !== 6 || verifying) return;
@@ -97,14 +112,21 @@ function SettingsOtpModal({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={onResend}
-            disabled={resending || verifying}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
-          >
-            {resending ? "Sending new code..." : "Resend code"}
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending || verifying || timeLeft > 0}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 disabled:no-underline disabled:text-gray-400 dark:disabled:text-gray-500 font-medium"
+            >
+              {resending ? "Sending new code..." : "Resend code"}
+            </button>
+            {timeLeft > 0 && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                Resend in {timeLeft}s
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
@@ -235,6 +257,25 @@ export default function SettingsPage() {
       setError("New password and confirmation do not match.");
       return false;
     }
+
+    const pass = securityForm.newPassword;
+    if (pass.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return false;
+    }
+    if (!/[A-Z]/.test(pass)) {
+      setError("Password must contain at least one capital letter.");
+      return false;
+    }
+    if (!/\d/.test(pass)) {
+      setError("Password must contain at least one number.");
+      return false;
+    }
+    if (!/[^A-Za-z0-9]/.test(pass)) {
+      setError("Password must contain at least one special character.");
+      return false;
+    }
+
     return true;
   };
 

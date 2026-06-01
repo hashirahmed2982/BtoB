@@ -222,6 +222,7 @@ body {
   padding: 1rem;
   border-bottom: 1px solid var(--surface-border);
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .cart-item:last-child {
@@ -232,16 +233,27 @@ body {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.cart-item-actions input[type="number"]::-webkit-outer-spin-button,
+.cart-item-actions input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .cart-item-actions input[type="number"] {
-  width: 60px;
-  padding: 0.4rem;
+  -moz-appearance: textfield;
+  width: 100%;
+  min-width: 70px;
+  max-width: 100px;
+  padding: 0.4rem 0.25rem;
   border: 1px solid var(--surface-border);
   border-radius: 0.5rem;
   text-align: center;
   background: var(--background);
   color: var(--foreground);
+  font-size: 0.95rem;
 }
 
 .cart-footer {

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import type { ReactNode } from "react";
 import { products } from "@/app/data/products";
 
@@ -93,7 +93,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   // ─── Cart actions ────────────────────────────────────────────────────────
 
-  const addToCart = (productId: string, quantity = 1, product?: CartProduct) => {
+  const addToCart = useCallback((productId: string, quantity = 1, product?: CartProduct) => {
     setCartItems(prev => {
       const existing = prev.find(i => i.productId === productId);
       if (existing) {
@@ -105,16 +105,16 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { productId, quantity, product }];
     });
-  };
+  }, []);
 
-  const buyNow = (productId: string, product?: CartProduct) => {
+  const buyNow = useCallback((productId: string, product?: CartProduct) => {
     setCartItems(prev => {
       const rest = prev.filter(i => i.productId !== productId);
       return [...rest, { productId, quantity: 1, product }];
     });
-  };
+  }, []);
 
-  const updateCartQuantity = (productId: string, quantity: number) => {
+  const updateCartQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {
       setCartItems(prev => prev.filter(i => i.productId !== productId));
       return;
@@ -122,25 +122,27 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     setCartItems(prev =>
       prev.map(i => i.productId === productId ? { ...i, quantity } : i)
     );
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) =>
-    setCartItems(prev => prev.filter(i => i.productId !== productId));
+  const removeFromCart = useCallback((productId: string) =>
+    setCartItems(prev => prev.filter(i => i.productId !== productId)),
+  []);
 
-  const clearCart = () => setCartItems([]);
+  const clearCart = useCallback(() => setCartItems([]), []);
 
   // ─── Favorites ───────────────────────────────────────────────────────────
 
   const favoriteIds = favoriteItems.map(f => f.productId);
 
-  const isFavorite = (productId: string) => favoriteIds.includes(productId);
+  const isFavorite = useCallback((productId: string) => favoriteIds.includes(productId), [favoriteIds]);
 
-  const toggleFavorite = (productId: string, product?: CartProduct) =>
+  const toggleFavorite = useCallback((productId: string, product?: CartProduct) =>
     setFavoriteItems(prev =>
       prev.some(f => f.productId === productId)
         ? prev.filter(f => f.productId !== productId)
         : [...prev, { productId, product }]
-    );
+    ),
+  []);
 
   // ─── Derived ─────────────────────────────────────────────────────────────
 
@@ -156,10 +158,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [cartItems]
   );
 
-  const getCartProduct = (productId: string) =>
-    cartItems.find(i => i.productId === productId)?.product;
+  const getCartProduct = useCallback((productId: string) =>
+    cartItems.find(i => i.productId === productId)?.product,
+  [cartItems]);
 
-  // ─── Context value ────────────────────────────────────────────────────────
+  // ─── Context value ────────────────────────────────────────────────────
 
   const value = useMemo<ShopContextValue>(() => ({
     cartItems,
@@ -176,8 +179,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     isFavorite,
     toggleFavorite,
     getCartProduct,
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [cartItems, favoriteItems, cartCount, favoriteCount, cartTotal]);
+  }), [cartItems, favoriteItems, cartCount, favoriteCount, cartTotal, addToCart, buyNow, updateCartQuantity, removeFromCart, clearCart, isFavorite, toggleFavorite, getCartProduct]);
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
 }
