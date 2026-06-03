@@ -1,14 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
 import Dashboard from "@/components/Dashboard";
 import { useShop } from "@/app/context/ShopContext";
-import { api } from "@/src/app/lib/api";
-import type { Product } from "@/app/data/products";
+import { api } from "@/app/lib/api";
+import type { Product } from "@/app/products/page";
 
-// ─── Gradient cycle (same as products page mapper) ────────────────────────────
+// ─── Gradients (must match products page) ────────────────────────────────────
 const GRADIENTS = [
   "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
   "linear-gradient(135deg, #dc2626 0%, #111827 100%)",
@@ -22,23 +22,29 @@ const GRADIENTS = [
 
 function mapApiToProduct(p: any): Product {
   let badge = "";
-  if (p.hasCustomPrice)                                       badge = "Special Price";
+  if (p.hasCustomPrice)                                      badge = "Special Price";
   else if (p.availableCodes != null && p.availableCodes < 10) badge = "Low Stock";
-  else if (p.source !== "internal")                           badge = "Live Stock";
+  else if (p.source !== "internal")                          badge = "Live Stock";
 
   return {
-    id:               String(p.id),
-    name:             p.name     || "",
-    category:         p.category || "",
-    shortDescription: p.description
-                        ? p.description.slice(0, 80) + (p.description.length > 80 ? "…" : "")
-                        : `${p.brand || p.category || "Digital"} product — instant delivery.`,
-    description:      p.description || "",
-    price:            parseFloat(p.price) || 0,
-    rating:           0,
-    reviews:          0,
+    id:                     String(p.id),
+    name:                   p.name        || "",
+    category:               p.category    || "",
+    shortDescription:       p.description
+      ? p.description.slice(0, 80) + (p.description.length > 80 ? "…" : "")
+      : `${p.brand || p.category || "Digital"} product — instant delivery.`,
+    description:            p.description || "",
+    price:                  parseFloat(p.price) || 0,
+    rating:                 0,
+    reviews:                0,
     badge,
-    imageGradient:    p.images?.[0] ? "" : GRADIENTS[parseInt(p.id) % GRADIENTS.length],
+    imageGradient:          p.images?.[0] ? "" : GRADIENTS[parseInt(p.id) % GRADIENTS.length],
+    brand:                  p.brand             || undefined,
+    regularPrice:           p.regularPrice      || undefined,
+    hasCustomPrice:         p.hasCustomPrice     || false,
+    redemptionInstructions: p.redemptionInstructions || undefined,
+    availableCodes:         p.availableCodes     ?? undefined,
+    unlimitedStock:         p.unlimitedStock     || false,
   };
 }
 
@@ -52,21 +58,33 @@ function HeartIcon({ filled }: { filled: boolean }) {
 }
 
 export default function ProductDetailsPage() {
-  const params  = useParams<{ id: string }>();
-  const router  = useRouter();
-  const { addToCart, buyNow, isFavorite, toggleFavorite } = useShop();
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
 
-  const [product,  setProduct]  = useState<Product | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
+  const {
+    cartItems,
+    addToCart,
+    updateCartQuantity,
+    removeFromCart,
+    buyNow,
+    isFavorite,
+    toggleFavorite,
+  } = useShop();
 
-  // ─── Fetch product from API ────────────────────────────────────────────────
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState<string | null>(null);
+
+  // ─── Derive cart state from context (single source of truth) ─────────────
+  const cartItem = product ? cartItems.find(i => i.productId === product.id) : undefined;
+  const cartQty  = cartItem?.quantity ?? 0;
+  const inCart   = cartQty > 0;
+
+  // ─── Fetch product ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!params.id) return;
     setLoading(true);
     setError(null);
-
     api.getClientProductById(params.id)
       .then(res => {
         if (!res.data) { setError("Product not found"); return; }
@@ -76,7 +94,7 @@ export default function ProductDetailsPage() {
       .finally(() => setLoading(false));
   }, [params.id]);
 
-  // ─── Loading ──────────────────────────────────────────────────────────────
+  // ─── Loading skeleton ─────────────────────────────────────────────────────
   if (loading) {
     return (
       <Dashboard>
@@ -113,6 +131,7 @@ export default function ProductDetailsPage() {
   }
 
   const favorite = isFavorite(product.id);
+
   const cartSnapshot = {
     id:               product.id,
     name:             product.name,
@@ -124,6 +143,31 @@ export default function ProductDetailsPage() {
     description:      product.description,
     rating:           product.rating,
     reviews:          product.reviews,
+  };
+
+  // ─── Cart handlers ────────────────────────────────────────────────────────
+  const handleAddToCart = () => {
+    addToCart(product.id, 1, cartSnapshot);
+  };
+
+  const handleIncrement = () => {
+    updateCartQuantity(product.id, cartQty + 1);
+  };
+
+  const handleDecrement = () => {
+    if (cartQty <= 1) {
+      removeFromCart(product.id);
+    } else {
+      updateCartQuantity(product.id, cartQty - 1);
+    }
+  };
+
+  const handleBuyNow = () => {
+    // If not in cart yet, add with qty 1; if already in cart keep existing qty
+    if (!inCart) {
+      buyNow(product.id, cartSnapshot);
+    }
+    router.push("/cart");
   };
 
   return (
@@ -153,38 +197,108 @@ export default function ProductDetailsPage() {
               <strong className="text-xl">${product.price.toFixed(2)}</strong>
             </div>
 
-            {/* Actions */}
+            {/* ── Actions ───────────────────────────────────────────────── */}
             <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 mt-8">
-              <label className="flex items-center justify-center gap-2 app-input !w-24 flex-shrink-0 self-start sm:self-auto">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Qty</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={quantity}
-                  onChange={e => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full bg-transparent outline-none text-center dark:text-white"
-                />
-              </label>
 
-              <button type="button" className="app-button-primary flex-1 sm:flex-none"
-                onClick={() => addToCart(product.id, quantity, cartSnapshot)}>
-                Add to Cart
+              {/* Cart control — toggles between Add button and stepper */}
+              {!inCart ? (
+                <button
+                  type="button"
+                  className="app-button-primary flex-1 sm:flex-none flex items-center justify-center gap-2"
+                  onClick={handleAddToCart}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M3 3h2l1 5h13l-2 7H8L6 6H3m6 13a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z" />
+                  </svg>
+                  Add to Cart
+                </button>
+              ) : (
+                <div className="flex items-center rounded-[0.65rem] border border-[var(--surface-border)] bg-[var(--surface)] overflow-hidden h-[2.4rem] flex-1 sm:flex-none sm:w-36">
+                  {/* Minus */}
+                  <button
+                    type="button"
+                    onClick={handleDecrement}
+                    className="w-10 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+
+                  {/* Quantity + label */}
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white leading-none">
+                      {cartQty}
+                    </span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-none mt-0.5">
+                      in cart
+                    </span>
+                  </div>
+
+                  {/* Plus */}
+                  <button
+                    type="button"
+                    onClick={handleIncrement}
+                    className="w-10 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+
+              {/* Buy Now — goes straight to cart */}
+              <button
+                type="button"
+                className="app-button-secondary flex-1 sm:flex-none"
+                onClick={handleBuyNow}
+              >
+                {inCart ? "Go to Cart →" : "Buy Now"}
               </button>
 
-              <button type="button" className="app-button-secondary flex-1 sm:flex-none"
-                onClick={() => { buyNow(product.id, cartSnapshot); router.push("/cart"); }}>
-                Buy Now
-              </button>
-
-              <button type="button"
+              {/* Favourite */}
+              <button
+                type="button"
                 className={`app-button-secondary flex-1 sm:flex-none flex items-center justify-center gap-2 ${
                   favorite ? "text-red-500 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800" : ""
                 }`}
-                onClick={() => toggleFavorite(product.id, cartSnapshot)}>
+                onClick={() => toggleFavorite(product.id, cartSnapshot)}
+              >
                 <HeartIcon filled={favorite} />
                 <span>{favorite ? "Favorited" : "Add to Favorites"}</span>
               </button>
             </div>
+
+            {/* "In your cart" summary strip */}
+            {inCart && (
+              <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>
+                  <span className="font-semibold text-gray-800 dark:text-white">{cartQty}×</span> in your cart
+                  {" · "}
+                  <span className="font-semibold text-gray-800 dark:text-white">
+                    ${(product.price * cartQty).toFixed(2)} total
+                  </span>
+                </span>
+                <Link href="/cart" className="ml-auto text-xs text-blue-600 dark:text-blue-400 underline font-medium">
+                  View Cart
+                </Link>
+              </div>
+            )}
+
+            {/* Redemption instructions */}
+            {product.redemptionInstructions && (
+              <div className="mt-6 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                  Redemption Instructions
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                  {product.redemptionInstructions}
+                </p>
+              </div>
+            )}
           </div>
         </section>
       </div>

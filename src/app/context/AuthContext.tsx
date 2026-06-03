@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
       // record activity and start session timer
-      try { localStorage.setItem("lastActivity", String(Date.now())); } catch {}
+      try { localStorage.setItem("lastActivity", String(Date.now())); } catch { }
       // schedule timer will be handled by effect below when `user` changes
     } else {
       localStorage.removeItem("user");
@@ -66,15 +66,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    // Clear user and session data, cancel timer and redirect to login
     setUserState(null);
-    try {
-      localStorage.clear();
-    } catch {}
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
+
+    // ── Preserve cart across session timeout ──
+    const cart = localStorage.getItem("b2b-shop-state-v2");
+
+    localStorage.clear();
+
+    if (cart) {
+      localStorage.setItem("b2b-shop-state-v2", cart); // restore cart
     }
+
     window.location.href = "/login";
   };
 
@@ -87,14 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     timerRef.current = window.setTimeout(() => {
       // session expired
       setUserState(null);
-      try { localStorage.removeItem("user"); localStorage.removeItem("lastActivity"); } catch {}
+      try { localStorage.removeItem("user"); localStorage.removeItem("lastActivity"); } catch { }
       window.location.href = "/login";
     }, delay) as unknown as number;
   };
 
   // Update last activity timestamp and reset timer
   const updateLastActivity = () => {
-    try { localStorage.setItem("lastActivity", String(Date.now())); } catch {}
+    try { localStorage.setItem("lastActivity", String(Date.now())); } catch { }
     scheduleSessionTimeout();
   };
 

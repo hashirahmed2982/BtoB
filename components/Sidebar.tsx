@@ -46,34 +46,34 @@ const menuItems = [
       </svg>
     ),
   },
-  {
-    name: "Cart",
-    href: "/cart",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M3 3h2l1 5h13l-2 7H8L6 6H3m6 13a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Favorites",
-    href: "/favorites",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.8}
-          d="M3.172 5.172a4 4 0 015.656 0L12 8.343l3.172-3.171a4 4 0 115.656 5.656L12 19.657l-8.828-8.829a4 4 0 010-5.656z"
-        />
-      </svg>
-    ),
-  },
+  // {
+  //   name: "Cart",
+  //   href: "/cart",
+  //   icon: (
+  //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  //       <path
+  //         strokeLinecap="round"
+  //         strokeLinejoin="round"
+  //         strokeWidth={1.8}
+  //         d="M3 3h2l1 5h13l-2 7H8L6 6H3m6 13a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z"
+  //       />
+  //     </svg>
+  //   ),
+  // },
+  // {
+  //   name: "Favorites",
+  //   href: "/favorites",
+  //   icon: (
+  //     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  //       <path
+  //         strokeLinecap="round"
+  //         strokeLinejoin="round"
+  //         strokeWidth={1.8}
+  //         d="M3.172 5.172a4 4 0 015.656 0L12 8.343l3.172-3.171a4 4 0 115.656 5.656L12 19.657l-8.828-8.829a4 4 0 010-5.656z"
+  //       />
+  //     </svg>
+  //   ),
+  // },
   {
     name: "Settings",
     href: "/settings",

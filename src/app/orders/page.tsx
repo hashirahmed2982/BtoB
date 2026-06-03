@@ -187,12 +187,12 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
         <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              <span className="text-green-600 dark:text-green-400 font-medium">{order.deliveredQty}</span>
+              {/* <span className="text-green-600 dark:text-green-400 font-medium">{order.deliveredQty}</span>
               {" / "}
               <span className="font-medium">{order.totalQty}</span>
-              {" items delivered"}
+              {" items delivered"} */}
               {order.completedAt && (
-                <span className="ml-2">· Completed {formatDateTime(order.completedAt)}</span>
+                <span className="ml-2">Completed {formatDateTime(order.completedAt)}</span>
               )}
             </p>
             {(order.status === "pending" || order.status === "processing") && (

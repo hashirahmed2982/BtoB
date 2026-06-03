@@ -11,26 +11,26 @@ import { api } from "@/app/lib/api";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface WalletInfo {
-  balance:  number;
+  balance: number;
   currency: string;
 }
 
 function mapCartProductFromApi(p: any) {
   return {
-    id:               String(p.id),
-    name:             p.name || "",
-    category:         p.category || "",
-    price:            parseFloat(p.price) || 0,
-    imageGradient:    "",
-    badge:            p.hasCustomPrice ? "Special Price" : "",
+    id: String(p.id),
+    name: p.name || "",
+    category: p.category || "",
+    price: parseFloat(p.price) || 0,
+    imageGradient: "",
+    badge: p.hasCustomPrice ? "Special Price" : "",
     shortDescription: p.description
       ? p.description.slice(0, 80) + (p.description.length > 80 ? "..." : "")
       : `${p.brand || p.category || "Digital"} product - instant delivery.`,
-    description:      p.description || "",
-    rating:           0,
-    reviews:          0,
-    availableCodes:   p.availableCodes !== undefined && p.availableCodes !== null ? Number(p.availableCodes) : null,
-    unlimitedStock:   p.unlimitedStock !== undefined ? Boolean(p.unlimitedStock) : false,
+    description: p.description || "",
+    rating: 0,
+    reviews: 0,
+    availableCodes: p.availableCodes !== undefined && p.availableCodes !== null ? Number(p.availableCodes) : null,
+    unlimitedStock: p.unlimitedStock !== undefined ? Boolean(p.unlimitedStock) : false,
   };
 }
 
@@ -185,33 +185,33 @@ function CheckoutModal({
   cartItems, cartTotal, getProduct,
   onClose, onConfirm, placing, requestingOtp, placeError,
 }: {
-  cartItems:  { productId: string; quantity: number }[];
-  cartTotal:  number;
+  cartItems: { productId: string; quantity: number }[];
+  cartTotal: number;
   getProduct: (id: string) => { name: string; category: string; price: number } | undefined;
-  onClose:    () => void;
-  onConfirm:  () => Promise<void>;
-  placing:    boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  placing: boolean;
   requestingOtp: boolean;
   placeError: string | null;
 }) {
-  const [wallet,        setWallet]        = useState<WalletInfo | null>(null);
+  const [wallet, setWallet] = useState<WalletInfo | null>(null);
   const [loadingWallet, setLoadingWallet] = useState(true);
-  const [walletError,   setWalletError]   = useState<string | null>(null);
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   useEffect(() => {
     api.getWalletBalance()
       .then(res => setWallet({
-        balance:  parseFloat(res.data?.balance ?? 0),
+        balance: parseFloat(res.data?.balance ?? 0),
         currency: res.data?.currency ?? "USD",
       }))
       .catch(() => setWalletError("Could not load wallet balance."))
       .finally(() => setLoadingWallet(false));
   }, []);
 
-  const currency     = wallet?.currency ?? "USD";
-  const balance      = wallet?.balance  ?? 0;
+  const currency = wallet?.currency ?? "USD";
+  const balance = wallet?.balance ?? 0;
   const balanceAfter = balance - cartTotal;
-  const canAfford    = !loadingWallet && !walletError && balanceAfter >= 0;
+  const canAfford = !loadingWallet && !walletError && balanceAfter >= 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -240,7 +240,7 @@ function CheckoutModal({
           </p>
           <div className="space-y-1">
             {cartItems.map(item => {
-              const product  = getProduct(item.productId);
+              const product = getProduct(item.productId);
               const subtotal = product
                 ? (product.price * item.quantity).toFixed(2)
                 : "—";
@@ -297,11 +297,10 @@ function CheckoutModal({
             ) : walletError ? (
               <span className="text-sm text-gray-400">—</span>
             ) : (
-              <span className={`text-sm font-bold ${
-                balanceAfter >= 0
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}>
+              <span className={`text-sm font-bold ${balanceAfter >= 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+                }`}>
                 {currency} {balanceAfter.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             )}
@@ -390,11 +389,11 @@ export default function CartPage() {
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [placing,      setPlacing]      = useState(false);
+  const [placing, setPlacing] = useState(false);
   const [requestingOtp, setRequestingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [resendingOtp, setResendingOtp] = useState(false);
-  const [placeError,   setPlaceError]   = useState<string | null>(null);
+  const [placeError, setPlaceError] = useState<string | null>(null);
   const [otpError, setOtpError] = useState<string | null>(null);
   const syncRef = useRef(false);
 
@@ -417,17 +416,17 @@ export default function CartPage() {
           // Update product snapshot
           addToCart(result.productId, 0, result.product);
 
-          // Check stock limits and auto-cap quantity
-          const item = cartItems.find(i => i.productId === result.productId);
-          if (item) {
-            const hasStockLimit = !result.product.unlimitedStock && result.product.availableCodes !== undefined && result.product.availableCodes !== null;
-            if (hasStockLimit) {
-              const maxStock = result.product.availableCodes || 0;
-              if (item.quantity > maxStock) {
-                updateCartQuantity(result.productId, maxStock);
-              }
-            }
-          }
+          // // Check stock limits and auto-cap quantity
+          // const item = cartItems.find(i => i.productId === result.productId);
+          // if (item) {
+          //   const hasStockLimit = !result.product.unlimitedStock && result.product.availableCodes !== undefined && result.product.availableCodes !== null;
+          //   if (hasStockLimit) {
+          //     const maxStock = result.product.availableCodes || 0;
+          //     if (item.quantity > maxStock) {
+          //       updateCartQuantity(result.productId, maxStock);
+          //     }
+          //   }
+          // }
         }
       });
     });
@@ -536,53 +535,61 @@ export default function CartPage() {
             <>
               <div className="space-y-3">
                 {cartItems.map(item => {
-                  const product  = getCartProduct(item.productId);
+                  const product = getCartProduct(item.productId);
                   const subtotal = product
                     ? (product.price * item.quantity).toFixed(2)
                     : "—";
 
+                  // REPLACE WITH:
                   return (
                     <div key={item.productId} className="cart-item">
+
+                      {/* Product info */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">
-                          {product?.name ?? item.productId}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {product?.category ?? ""}
-                        </p>
+                        <p className="font-semibold truncate">{product?.name ?? item.productId}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{product?.category ?? ""}</p>
                       </div>
-                      <div className="cart-item-actions">
-                        <div className="flex flex-col items-center gap-1">
-                          <input
-                            type="number"
-                            min={1}
-                            max={product?.unlimitedStock ? undefined : product?.availableCodes ?? undefined}
-                            value={item.quantity}
-                            onChange={e => {
-                              const val = Math.max(1, Number(e.target.value) || 1);
-                              const maxVal = product?.unlimitedStock ? val : (product?.availableCodes ?? val);
-                              updateCartQuantity(
-                                item.productId,
-                                Math.min(val, maxVal)
-                              );
-                            }}
-                            className="text-center"
-                          />
-                          {product && !product.unlimitedStock && product.availableCodes !== undefined && product.availableCodes !== null && (
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
-                              {product.availableCodes} available
-                            </span>
-                          )}
-                        </div>
-                        <p className="font-semibold whitespace-nowrap">${subtotal}</p>
+
+                      {/* Stepper — same as ProductCard, no free-type input */}
+                      <div className="flex items-center rounded-[0.65rem] border border-[var(--surface-border)] bg-[var(--surface)] overflow-hidden h-[2.4rem] w-28 flex-shrink-0">
                         <button
                           type="button"
-                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors flex-shrink-0"
-                          onClick={() => removeFromCart(item.productId)}
+                          onClick={() => {
+                            if (item.quantity <= 1) removeFromCart(item.productId);
+                            else updateCartQuantity(item.productId, item.quantity - 1);
+                          }}
+                          className="w-9 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                          aria-label="Decrease quantity"
                         >
-                          Remove
+                          −
+                        </button>
+                        <span className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-white select-none">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
+                          className="w-9 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                          aria-label="Increase quantity"
+                        >
+                          +
                         </button>
                       </div>
+
+                      {/* Subtotal */}
+                      <p className="font-semibold text-sm w-20 text-right flex-shrink-0">
+                        {product ? `$${(product.price * item.quantity).toFixed(2)}` : "—"}
+                      </p>
+
+                      {/* Remove */}
+                      <button
+                        type="button"
+                        className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors flex-shrink-0"
+                        onClick={() => removeFromCart(item.productId)}
+                      >
+                        Remove
+                      </button>
+
                     </div>
                   );
                 })}
