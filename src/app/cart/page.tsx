@@ -7,6 +7,7 @@ import Dashboard from "@/components/Dashboard";
 import { useShop } from "@/app/context/ShopContext";
 import { useAuth } from "@/app/context/AuthContext";
 import { api } from "@/app/lib/api";
+import QuantityStepper from "@/components/QuantityStepper";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -550,31 +551,13 @@ export default function CartPage() {
                         <p className="text-xs text-gray-500 dark:text-gray-400">{product?.category ?? ""}</p>
                       </div>
 
-                      {/* Stepper — same as ProductCard, no free-type input */}
-                      <div className="flex items-center rounded-[0.65rem] border border-[var(--surface-border)] bg-[var(--surface)] overflow-hidden h-[2.4rem] w-28 flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (item.quantity <= 1) removeFromCart(item.productId);
-                            else updateCartQuantity(item.productId, item.quantity - 1);
-                          }}
-                          className="w-9 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
-                          aria-label="Decrease quantity"
-                        >
-                          −
-                        </button>
-                        <span className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-white select-none">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
-                          className="w-9 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
-                          aria-label="Increase quantity"
-                        >
-                          +
-                        </button>
-                      </div>
+                      {/* Quantity stepper with manual input */}
+                      <QuantityStepper
+                        quantity={item.quantity}
+                        onChange={qty => updateCartQuantity(item.productId, qty)}
+                        onRemove={() => removeFromCart(item.productId)}
+                        size="md"
+                      />
 
                       {/* Subtotal */}
                       <p className="font-semibold text-sm w-20 text-right flex-shrink-0">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Product } from "@/app/products/page";
 import { useShop } from "@/app/context/ShopContext";
+import QuantityStepper from "./QuantityStepper";
 
 interface ProductCardProps {
   product: Product;
@@ -98,26 +99,13 @@ export default function ProductCard({ product }: ProductCardProps) {
               Add to Cart
             </button>
           ) : (
-            <div className="flex-1 flex items-center justify-between gap-1 rounded-[0.65rem] border border-[var(--surface-border)] bg-[var(--surface)] overflow-hidden h-[2.4rem]">
-              <button
-                type="button"
-                onClick={handleDecrement}
-                className="w-10 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
-                aria-label="Decrease quantity"
-              >
-                −
-              </button>
-              <span className="flex-1 text-center text-sm font-bold text-gray-900 dark:text-white select-none">
-                {quantity}
-              </span>
-              <button
-                type="button"
-                onClick={handleIncrement}
-                className="w-10 h-full flex items-center justify-center text-lg font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
-                aria-label="Increase quantity"
-              >
-                +
-              </button>
+            <div className="flex-1">
+              <QuantityStepper
+                quantity={quantity}
+                onChange={qty => updateCartQuantity(product.id, qty)}
+                onRemove={() => removeFromCart(product.id)}
+                size="sm"
+              />
             </div>
           )}
 

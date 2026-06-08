@@ -41,7 +41,7 @@ function SettingsOtpModal({
   onResend: () => Promise<void>;
 }) {
   const [otp, setOtp] = useState("");
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(120);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -54,7 +54,7 @@ function SettingsOtpModal({
   const handleResend = async () => {
     if (resending || verifying || timeLeft > 0) return;
     await onResend();
-    setTimeLeft(60);
+    setTimeLeft(120);
   };
 
   const submit = () => {
