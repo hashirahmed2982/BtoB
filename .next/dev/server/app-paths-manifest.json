@@ -1,14 +1,9 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/cart/page": "app/cart/page.js",
-  "/change-password/page": "app/change-password/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/favorites/page": "app/favorites/page.js",
   "/login/page": "app/login/page.js",
   "/orders/page": "app/orders/page.js",
   "/page": "app/page.js",
-  "/products/[id]/page": "app/products/[id]/page.js",
-  "/products/page": "app/products/page.js",
-  "/settings/page": "app/settings/page.js",
-  "/wallet/page": "app/wallet/page.js"
+  "/products/page": "app/products/page.js"
 }

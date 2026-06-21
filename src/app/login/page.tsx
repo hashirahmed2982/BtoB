@@ -22,12 +22,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // const response = await fetch(
-      //   `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/auth/client/login`,
-      //   {
+      
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "https://178-104-162-74.sslip.io"}/api/v1/auth/client/login`,
+        `${process.env.NEXT_PUBLIC_API_URL || "https://api.cardcovefzc.com"}/api/v1/auth/client/login`,
         {
+          // const response = await fetch(
+          //   `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/auth/client/login`,
+          //   {
+          // const response = await fetch(
+          //   `${process.env.NEXT_PUBLIC_API_URL || "https://178-104-162-74.sslip.io"}/api/v1/auth/client/login`,
+          //   {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -129,9 +133,9 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-center px-1 pt-1">
-                <input 
-                  id="remember-me" name="remember-me" type="checkbox" 
-                  className="h-4 w-4 bg-white/5 border-white/10 text-cyan-600 rounded cursor-pointer accent-cyan-600" 
+                <input
+                  id="remember-me" name="remember-me" type="checkbox"
+                  className="h-4 w-4 bg-white/5 border-white/10 text-cyan-600 rounded cursor-pointer accent-cyan-600"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-xs text-gray-400 cursor-pointer">
                   Keep me logged in

@@ -8,15 +8,7 @@
       "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
       "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
     ],
-    "[project]/src/app/change-password/page": [
-      "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
-      "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
-    ],
     "[project]/src/app/dashboard/page": [
-      "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
-      "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
-    ],
-    "[project]/src/app/favorites/page": [
       "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
       "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
     ],
@@ -32,19 +24,7 @@
       "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
       "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
     ],
-    "[project]/src/app/products/[id]/page": [
-      "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
-      "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
-    ],
     "[project]/src/app/products/page": [
-      "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
-      "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
-    ],
-    "[project]/src/app/settings/page": [
-      "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
-      "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
-    ],
-    "[project]/src/app/wallet/page": [
       "static/media/caa3a2e1cccd8315-s.p.16t1db8_9y2o~.woff2",
       "static/media/797e433ab948586e-s.p.0.q-h669a_dqa.woff2"
     ]

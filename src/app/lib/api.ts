@@ -1,7 +1,8 @@
 // lib/api.ts
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://178-104-162-74.sslip.io';
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://178-104-162-74.sslip.io';
 // const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.cardcovefzc.com';
+
 
 const API_VERSION = 'v1';
 
