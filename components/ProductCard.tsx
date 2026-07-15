@@ -24,22 +24,22 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const cartItem = cartItems.find(i => i.productId === product.id);
   const quantity = cartItem?.quantity ?? 0;
-  const inCart   = quantity > 0;
+  const inCart = quantity > 0;
 
   const snapshot = {
-    id:               product.id,
-    name:             product.name,
-    category:         product.category,
-    price:            product.price,
-    imageGradient:    product.imageGradient,
-    badge:            product.badge,
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    imageGradient: product.imageGradient,
+    badge: product.badge,
     shortDescription: product.shortDescription,
-    description:      product.description,
-    rating:           product.rating,
-    reviews:          product.reviews,
+    description: product.description,
+    rating: product.rating,
+    reviews: product.reviews,
   };
 
-  const handleAdd       = () => addToCart(product.id, 1, snapshot);
+  const handleAdd = () => addToCart(product.id, 1, snapshot);
   const handleIncrement = () => updateCartQuantity(product.id, quantity + 1);
   const handleDecrement = () => {
     if (quantity <= 1) removeFromCart(product.id);
@@ -54,7 +54,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${product.id}`} className="block flex-shrink-0">
         <div
           className="product-visual flex items-start justify-between p-3"
-          style={{ background: product.imageGradient || "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }}
+          style={
+            product.imageGradient?.startsWith('http')
+              ? { backgroundImage: `url(${product.imageGradient})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : { background: product.imageGradient || "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }
+          }
         >
           {product.badge && <span className="product-badge">{product.badge}</span>}
           <span className="product-category">{product.category}</span>

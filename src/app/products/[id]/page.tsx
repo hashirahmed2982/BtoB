@@ -22,29 +22,29 @@ const GRADIENTS = [
 
 function mapApiToProduct(p: any): Product {
   let badge = "";
-  if (p.hasCustomPrice)                                      badge = "Special Price";
+  if (p.hasCustomPrice) badge = "Special Price";
   else if (p.availableCodes != null && p.availableCodes < 10) badge = "Low Stock";
-  else if (p.source !== "internal")                          badge = "Live Stock";
+  else if (p.source !== "internal") badge = "Live Stock";
 
   return {
-    id:                     String(p.id),
-    name:                   p.name        || "",
-    category:               p.category    || "",
-    shortDescription:       p.description
+    id: String(p.id),
+    name: p.name || "",
+    category: p.category || "",
+    shortDescription: p.description
       ? p.description.slice(0, 80) + (p.description.length > 80 ? "…" : "")
       : `${p.brand || p.category || "Digital"} product — instant delivery.`,
-    description:            p.description || "",
-    price:                  parseFloat(p.price) || 0,
-    rating:                 0,
-    reviews:                0,
+    description: p.description || "",
+    price: parseFloat(p.price) || 0,
+    rating: 0,
+    reviews: 0,
     badge,
-    imageGradient:          p.images?.[0] ? "" : GRADIENTS[parseInt(p.id) % GRADIENTS.length],
-    brand:                  p.brand             || undefined,
-    regularPrice:           p.regularPrice      || undefined,
-    hasCustomPrice:         p.hasCustomPrice     || false,
+    imageGradient: p.images?.[0] ? "" : GRADIENTS[parseInt(p.id) % GRADIENTS.length],
+    brand: p.brand || undefined,
+    regularPrice: p.regularPrice || undefined,
+    hasCustomPrice: p.hasCustomPrice || false,
     redemptionInstructions: p.redemptionInstructions || undefined,
-    availableCodes:         p.availableCodes     ?? undefined,
-    unlimitedStock:         p.unlimitedStock     || false,
+    availableCodes: p.availableCodes ?? undefined,
+    unlimitedStock: p.unlimitedStock || false,
   };
 }
 
@@ -73,12 +73,12 @@ export default function ProductDetailsPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // ─── Derive cart state from context (single source of truth) ─────────────
   const cartItem = product ? cartItems.find(i => i.productId === product.id) : undefined;
-  const cartQty  = cartItem?.quantity ?? 0;
-  const inCart   = cartQty > 0;
+  const cartQty = cartItem?.quantity ?? 0;
+  const inCart = cartQty > 0;
 
   // ─── Fetch product ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -133,16 +133,16 @@ export default function ProductDetailsPage() {
   const favorite = isFavorite(product.id);
 
   const cartSnapshot = {
-    id:               product.id,
-    name:             product.name,
-    category:         product.category,
-    price:            product.price,
-    imageGradient:    product.imageGradient,
-    badge:            product.badge,
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    imageGradient: product.imageGradient,
+    badge: product.badge,
     shortDescription: product.shortDescription,
-    description:      product.description,
-    rating:           product.rating,
-    reviews:          product.reviews,
+    description: product.description,
+    rating: product.rating,
+    reviews: product.reviews,
   };
 
   // ─── Cart handlers ────────────────────────────────────────────────────────
@@ -178,7 +178,11 @@ export default function ProductDetailsPage() {
           {/* Hero banner */}
           <div
             className="h-48 sm:h-64 rounded-xl flex items-start p-6 mb-6"
-            style={{ background: product.imageGradient || "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }}
+            style={
+              product.imageGradient?.startsWith('http')
+                ? { backgroundImage: `url(${product.imageGradient})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : { background: product.imageGradient || "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }
+            }
           >
             {product.badge && <span className="product-badge">{product.badge}</span>}
           </div>
@@ -259,9 +263,8 @@ export default function ProductDetailsPage() {
               {/* Favourite */}
               <button
                 type="button"
-                className={`app-button-secondary flex-1 sm:flex-none flex items-center justify-center gap-2 ${
-                  favorite ? "text-red-500 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800" : ""
-                }`}
+                className={`app-button-secondary flex-1 sm:flex-none flex items-center justify-center gap-2 ${favorite ? "text-red-500 border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800" : ""
+                  }`}
                 onClick={() => toggleFavorite(product.id, cartSnapshot)}
               >
                 <HeartIcon filled={favorite} />

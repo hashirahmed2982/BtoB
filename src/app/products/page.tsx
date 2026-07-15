@@ -41,55 +41,54 @@ const GRADIENTS = [
 function mapApiProduct(p: any, index: number): Product {
   // Pick a badge based on stock / pricing
   let badge = "";
-  if (p.hasCustomPrice)                              badge = "Special Price";
+  if (p.hasCustomPrice) badge = "Special Price";
   else if (p.availableCodes != null && p.availableCodes < 10) badge = "Low Stock";
-  else if (p.source !== "internal")                  badge = "Live Stock";
+  else if (p.source !== "internal") badge = "Live Stock";
 
   return {
-    id:                     String(p.id),
-    name:                   p.name        || "",
-    category:               p.category    || "",
-    shortDescription:       p.description
-                              ? p.description.slice(0, 80) + (p.description.length > 80 ? "…" : "")
-                              : `${p.brand || p.category || "Digital"} product — instant delivery.`,
-    description:            p.description || "",
-    price:                  parseFloat(p.price) || 0,
-    rating:                 0,   // not stored in DB — placeholder
-    reviews:                0,   // not stored in DB — placeholder
+    id: String(p.id),
+    name: p.name || "",
+    category: p.category || "",
+    shortDescription: p.description
+      ? p.description.slice(0, 80) + (p.description.length > 80 ? "…" : "")
+      : `${p.brand || p.category || "Digital"} product — instant delivery.`,
+    description: p.description || "",
+    price: parseFloat(p.price) || 0,
+    rating: 0,   // not stored in DB — placeholder
+    reviews: 0,   // not stored in DB — placeholder
     badge,
-    imageGradient:          p.images?.[0]
-                              ? ""   // ProductCard can use the URL directly when set
-                              : GRADIENTS[index % GRADIENTS.length],
+    // REPLACE WITH:
+    imageGradient: p.images?.[0] || GRADIENTS[index % GRADIENTS.length],
     // Extended
-    brand:                  p.brand             || undefined,
-    regularPrice:           p.regularPrice      || undefined,
-    hasCustomPrice:         p.hasCustomPrice     || false,
+    brand: p.brand || undefined,
+    regularPrice: p.regularPrice || undefined,
+    hasCustomPrice: p.hasCustomPrice || false,
     redemptionInstructions: p.redemptionInstructions || undefined,
-    availableCodes:         p.availableCodes     ?? undefined,
-    unlimitedStock:         p.unlimitedStock     || false,
+    availableCodes: p.availableCodes ?? undefined,
+    unlimitedStock: p.unlimitedStock || false,
   };
 }
 
 export default function ProductsPage() {
-  const [products,    setProducts]    = useState<Product[]>([]);
-  const [categories,  setCategories]  = useState<string[]>([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Filters
-  const [filterCategory,  setFilterCategory]  = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
 
   // Pagination
-  const [page,       setPage]       = useState(1);
+  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [total,      setTotal]      = useState(0);
+  const [total, setTotal] = useState(0);
   const LIMIT = 50;
 
   // ─── Load categories once on mount ──────────────────────────────────────
   useEffect(() => {
     api.getClientProductCategories()
       .then(res => setCategories(res.data || []))
-      .catch(() => {/* non-critical */});
+      .catch(() => {/* non-critical */ });
   }, []);
 
   // ─── Load products ───────────────────────────────────────────────────────
