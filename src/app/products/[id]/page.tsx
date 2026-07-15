@@ -38,7 +38,7 @@ function mapApiToProduct(p: any): Product {
     rating: 0,
     reviews: 0,
     badge,
-    imageGradient: p.images?.[0] || GRADIENTS[parseInt(p.id) % GRADIENTS.length],
+    imageGradient: p.images?.[1] || GRADIENTS[parseInt(p.id) % GRADIENTS.length],
     brand: p.brand || undefined,
     regularPrice: p.regularPrice || undefined,
     hasCustomPrice: p.hasCustomPrice || false,
