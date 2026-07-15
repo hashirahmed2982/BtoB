@@ -180,7 +180,7 @@ export default function ProductDetailsPage() {
             className="h-48 sm:h-64 rounded-xl flex items-start p-6 mb-6"
             style={
               product.imageGradient?.startsWith('http')
-                ? { backgroundImage: `url(${product.imageGradient})`, backgroundSize: 'fit', backgroundPosition: 'center' }
+                ? { backgroundImage: `url(${product.imageGradient})`, backgroundSize: 'cover', backgroundPosition: 'center' }
                 : { background: product.imageGradient || "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }
             }
           >
