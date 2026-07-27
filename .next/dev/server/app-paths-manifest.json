@@ -5,5 +5,6 @@
   "/login/page": "app/login/page.js",
   "/orders/page": "app/orders/page.js",
   "/page": "app/page.js",
-  "/products/page": "app/products/page.js"
+  "/products/page": "app/products/page.js",
+  "/wallet/page": "app/wallet/page.js"
 }

@@ -74,6 +74,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   // Filters
   const [filterCategory, setFilterCategory] = useState("all");
@@ -90,13 +91,17 @@ export default function ProductsPage() {
       .then(res => setCategories(res.data || []))
       .catch(() => {/* non-critical */ });
   }, []);
-
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPage(1); // reset to page 1 on new search
+  };
   // ─── Load products ───────────────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const res = await api.getClientProducts({
+        search: search.trim() || undefined,
         category: filterCategory !== "all" ? filterCategory : undefined,
         page,
         limit: LIMIT,
@@ -109,10 +114,10 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filterCategory, page]);
+  }, [filterCategory, page , search]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [filterCategory]);
+  useEffect(() => { setPage(1); }, [filterCategory , search]);
   useEffect(() => { load(); }, [load]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
@@ -132,7 +137,36 @@ export default function ProductsPage() {
         {/* Category Selection Dropdown */}
         <section className="app-card">
           <div className="flex flex-col gap-4">
+
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              {/* Search input */}
+              <div className="relative flex-shrink-0 w-full sm:w-64">
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => handleSearch(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-[var(--surface-border)] bg-[var(--surface)] text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => handleSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 Filter by Category:
               </label>
