@@ -39,11 +39,16 @@ const GRADIENTS = [
 ];
 
 function mapApiProduct(p: any, index: number): Product {
-  // Pick a badge based on stock / pricing
+  // Pick a badge based on stock / pricing.
+  // availableCodes === null is the API's unified "real-time stock" signal —
+  // true for a pure supplier product, and (as of the backend's
+  // sku_supplier_links check) also true for an internal product that has
+  // since had a supplier linked to it. Checking p.source alone would miss
+  // that second case, since linking a supplier never changes it.
   let badge = "";
-  if (p.hasCustomPrice)                              badge = "Special Price";
-  else if (p.availableCodes != null && p.availableCodes < 10) badge = "Low Stock";
-  else if (p.source !== "internal")                  badge = "Live Stock";
+  if (p.hasCustomPrice)                                        badge = "Special Price";
+  else if (p.availableCodes != null && p.availableCodes < 10)   badge = "Low Stock";
+  else if (p.availableCodes == null)                            badge = "Live Stock";
 
   return {
     id:                     String(p.id),
