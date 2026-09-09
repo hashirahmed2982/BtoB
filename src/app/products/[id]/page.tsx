@@ -21,10 +21,14 @@ const GRADIENTS = [
 ];
 
 function mapApiToProduct(p: any): Product {
+  // availableCodes === null is the API's unified "real-time stock" signal —
+  // true for a pure supplier product, and also for an internal product that
+  // has since had a supplier linked to it (linking never changes p.source,
+  // so checking that alone would miss the second case).
   let badge = "";
-  if (p.hasCustomPrice)                                      badge = "Special Price";
+  if (p.hasCustomPrice)                                       badge = "Special Price";
   else if (p.availableCodes != null && p.availableCodes < 10) badge = "Low Stock";
-  else if (p.source !== "internal")                          badge = "Live Stock";
+  else if (p.availableCodes == null)                          badge = "Live Stock";
 
   return {
     id:                     String(p.id),
